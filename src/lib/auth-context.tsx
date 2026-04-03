@@ -19,6 +19,7 @@ export type User = {
   userId: number;
   name: string;
   email: string;
+  role: string;
 };
 
 type AuthContextType = {

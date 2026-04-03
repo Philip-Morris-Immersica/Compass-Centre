@@ -1,10 +1,50 @@
 import { streamText, convertToModelMessages, type UIMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { searchKnowledge, formatChunksForPrompt } from "@/lib/knowledge";
-import { buildSystemPrompt } from "@/lib/system-prompt";
+import { getSystemPromptText, buildSystemPrompt } from "@/lib/system-prompt";
 import { db } from "@/db";
-import { conversationsTable, messagesTable } from "@/db/schema";
+import { configTable, conversationsTable, messagesTable } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
+
+let configCache: Record<string, string> = {};
+let configCacheTime = 0;
+const CONFIG_CACHE_TTL = 60_000;
+
+// Map SDK chat IDs (nanoid) to DB conversation UUIDs
+const chatToConversation = new Map<string, string>();
+
+async function getConfig(key: string, fallback: string): Promise<string> {
+  const now = Date.now();
+  if (now - configCacheTime < CONFIG_CACHE_TTL && configCache[key] !== undefined) {
+    return configCache[key];
+  }
+  try {
+    const rows = await db.select().from(configTable);
+    configCache = {};
+    for (const row of rows) configCache[row.key] = row.value;
+    configCacheTime = now;
+  } catch {
+    // fall through to fallback
+  }
+  return configCache[key] ?? fallback;
+}
+
+async function getOrCreateConversation(chatId: string | undefined, language: string): Promise<string> {
+  if (chatId && chatToConversation.has(chatId)) {
+    return chatToConversation.get(chatId)!;
+  }
+
+  const [conv] = await db
+    .insert(conversationsTable)
+    .values({ language })
+    .returning({ id: conversationsTable.id });
+
+  if (chatId) {
+    chatToConversation.set(chatId, conv.id);
+  }
+
+  return conv.id;
+}
 
 export async function POST(req: Request) {
   try {
@@ -25,18 +65,18 @@ export async function POST(req: Request) {
 
     const userText = extractText(lastUserMessage);
 
-    const relevantChunks = searchKnowledge(userText, 8);
-    const knowledgeContext = formatChunksForPrompt(relevantChunks);
-    const systemPrompt = buildSystemPrompt(language, knowledgeContext);
+    const [relevantChunks, basePrompt, temperature, model, maxOutputTokens] = await Promise.all([
+      searchKnowledge(userText, 8),
+      getSystemPromptText(),
+      getConfig("temperature", "0.2").then(Number),
+      getConfig("model", "gpt-4.1-mini"),
+      getConfig("max_output_tokens", "2000").then(Number),
+    ]);
 
-    let conversationId = chatId;
-    if (!conversationId) {
-      const [conv] = await db
-        .insert(conversationsTable)
-        .values({ language })
-        .returning({ id: conversationsTable.id });
-      conversationId = conv.id;
-    }
+    const knowledgeContext = formatChunksForPrompt(relevantChunks);
+    const systemPrompt = buildSystemPrompt(basePrompt, language, knowledgeContext);
+
+    const conversationId = await getOrCreateConversation(chatId, language);
 
     if (userText) {
       await db.insert(messagesTable).values({
@@ -49,9 +89,9 @@ export async function POST(req: Request) {
     const modelMessages = await convertToModelMessages(uiMessages);
 
     const result = streamText({
-      model: openai("gpt-5.4-mini"),
-      temperature: 0.2,
-      maxOutputTokens: 2000,
+      model: openai(model),
+      temperature,
+      maxOutputTokens: maxOutputTokens,
       system: systemPrompt,
       messages: modelMessages,
       onFinish: async ({ text }) => {

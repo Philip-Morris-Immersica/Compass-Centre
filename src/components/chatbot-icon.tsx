@@ -10,7 +10,7 @@ export function ChatbotIcon({ onClick }: ChatbotIconProps) {
   return (
     <button
       onClick={onClick}
-      className="group fixed right-5 bottom-5 z-40 flex size-16 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-slate-200 shadow-xl transition-transform hover:scale-105 sm:right-6 sm:bottom-6 sm:size-[72px]"
+      className="group fixed right-5 bottom-4 z-40 flex size-[72px] items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-slate-200 shadow-xl transition-transform hover:scale-105 sm:right-6 sm:bottom-5 sm:size-20"
       aria-label="Open chatbot"
     >
       {/* Fallback chat icon */}

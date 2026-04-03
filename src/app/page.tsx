@@ -8,7 +8,7 @@ import { AuthScreen } from "@/components/auth-screen";
 import { Lobby } from "@/components/lobby";
 
 function AppContent() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -19,7 +19,13 @@ function AppContent() {
     );
   }
 
-  // Step 1: Choose language
+  // Logged-in users skip language selector; default to "bg" if none saved
+  if (!language && user) {
+    setLanguage("bg");
+    return null;
+  }
+
+  // Step 1: Choose language (only for first-time / not-logged-in visitors)
   if (!language) {
     return <LanguageSelector />;
   }

@@ -36,6 +36,15 @@ export const translations: Translations = {
     typePlaceholder: "Type here...",
     explore: "Explore",
     chatNotReady: "The chatbot is currently being set up. Please check back soon for full support.",
+    newChat: "New chat",
+    startListening: "Speak",
+    listening: "Listening… speak now",
+    recording: "Recording… tap mic to stop",
+    stopRecording: "Stop",
+    transcribing: "Transcribing…",
+    chatEmptyGreeting:
+      "Hello! I'm here to guide you through everything you need to settle in Bulgaria — from practical steps to useful advice.",
+    chatChooseLanguage: "Please choose your language to continue:",
 
     authTitle: "Welcome to Compass Centre",
     authSubtitle: "Sign in or create an account to continue.",
@@ -55,6 +64,9 @@ export const translations: Translations = {
     errorFieldsRequired: "Please fill in all fields.",
     errorPasswordShort: "Password must be at least 6 characters.",
     logoutButton: "Sign out",
+    adminPanel: "Admin Panel",
+    profile: "Profile",
+    myAccount: "My Account",
   },
 
   bg: {
@@ -72,6 +84,15 @@ export const translations: Translations = {
     typePlaceholder: "Напишете тук...",
     explore: "Разгледай",
     chatNotReady: "Чатботът се настройва в момента. Моля, проверете отново скоро.",
+    newChat: "Нов разговор",
+    startListening: "Говорете",
+    listening: "Слушам… говорете",
+    recording: "Записвам… натиснете микрофона за спиране",
+    stopRecording: "Спри",
+    transcribing: "Разпознавам…",
+    chatEmptyGreeting:
+      "Здравейте! Тук съм, за да ви помогна с всичко необходимо за живота в България — от практически стъпки до полезни съвети.",
+    chatChooseLanguage: "Моля, изберете език, за да продължим:",
 
     authTitle: "Добре дошли в Компас Център",
     authSubtitle: "Влезте или създайте акаунт, за да продължите.",
@@ -91,6 +112,9 @@ export const translations: Translations = {
     errorFieldsRequired: "Моля, попълнете всички полета.",
     errorPasswordShort: "Паролата трябва да е поне 6 символа.",
     logoutButton: "Изход",
+    adminPanel: "Админ панел",
+    profile: "Профил",
+    myAccount: "Моят акаунт",
   },
 
   ua: {
@@ -108,6 +132,15 @@ export const translations: Translations = {
     typePlaceholder: "Напишіть тут...",
     explore: "Дослідити",
     chatNotReady: "Чат-бот наразі налаштовується. Будь ласка, перевірте пізніше.",
+    newChat: "Нова розмова",
+    startListening: "Говоріть",
+    listening: "Слухаю… говоріть",
+    recording: "Записую… натисніть мікрофон для зупинки",
+    stopRecording: "Стоп",
+    transcribing: "Розпізнаю…",
+    chatEmptyGreeting:
+      "Вітаю! Я тут, щоб допомогти вам з усім необхідним для життя в Болгарії — від практичних кроків до корисних порад.",
+    chatChooseLanguage: "Будь ласка, оберіть мову, щоб продовжити:",
 
     authTitle: "Ласкаво просимо до Центру Компас",
     authSubtitle: "Увійдіть або створіть акаунт, щоб продовжити.",
@@ -127,6 +160,9 @@ export const translations: Translations = {
     errorFieldsRequired: "Будь ласка, заповніть усі поля.",
     errorPasswordShort: "Пароль має бути мінімум 6 символів.",
     logoutButton: "Вийти",
+    adminPanel: "Адмін панель",
+    profile: "Профіль",
+    myAccount: "Мій акаунт",
   },
 };
 

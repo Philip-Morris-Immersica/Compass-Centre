@@ -44,12 +44,13 @@ export async function register(
         email: normalizedEmail,
         passwordHash,
       })
-      .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email });
+      .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role });
 
     const session: SessionPayload = {
       userId: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
     };
 
     const token = await createSessionToken(session);
@@ -88,6 +89,7 @@ export async function login(
       userId: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
     };
 
     const token = await createSessionToken(session);
@@ -105,5 +107,16 @@ export async function logout(): Promise<void> {
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
-  return getSessionFromCookie();
+  const session = await getSessionFromCookie();
+  if (!session) return null;
+
+  const [user] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, session.userId))
+    .limit(1);
+
+  if (!user) return null;
+
+  return { ...session, role: user.role };
 }

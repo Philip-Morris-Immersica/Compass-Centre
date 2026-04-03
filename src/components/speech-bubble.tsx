@@ -13,7 +13,7 @@ export function SpeechBubble() {
   const lines = t("welcomeMessage").split("\n");
 
   return (
-    <div className="relative w-[300px] sm:w-[380px] md:w-[440px]">
+    <div className="relative w-[280px] sm:w-[360px] md:w-[420px] lg:w-[460px]">
       {/* Bubble body */}
       <div className="relative rounded-2xl bg-white/95 px-5 py-4 text-[13px] leading-relaxed text-slate-700 shadow-xl backdrop-blur-sm sm:px-6 sm:py-5 sm:text-sm md:text-[15px]">
         <button

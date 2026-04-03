@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import { db } from "@/db";
+import { knowledgeFilesTable } from "@/db/schema";
 
 export type KnowledgeChunk = {
   fileId: string;
@@ -17,52 +17,25 @@ type FileMeta = {
 
 const CHUNK_SIZE = 1500;
 const CHUNK_OVERLAP = 200;
+const CACHE_TTL_MS = 60_000;
 
 let cachedChunks: KnowledgeChunk[] | null = null;
+let cacheTimestamp = 0;
 
-function stripQuotes(s: string): string {
-  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-    return s.slice(1, -1);
-  }
-  return s;
-}
-
-function parseFrontmatter(raw: string): { meta: Record<string, unknown>; body: string } {
-  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (!match) return { meta: {}, body: raw };
-
-  const meta: Record<string, unknown> = {};
-  for (const line of match[1].split("\n")) {
-    const idx = line.indexOf(":");
-    if (idx === -1) continue;
-    const key = line.slice(0, idx).trim();
-    let value: unknown = line.slice(idx + 1).trim();
-    if (typeof value === "string" && value.startsWith("[") && value.endsWith("]")) {
-      value = value
-        .slice(1, -1)
-        .split(",")
-        .map((s) => stripQuotes(s.trim()));
-    } else if (typeof value === "string") {
-      value = stripQuotes(value as string);
+async function loadFiles(): Promise<FileMeta[]> {
+  const rows = await db.select().from(knowledgeFilesTable);
+  return rows.map((row) => {
+    let tags: string[] = [];
+    try {
+      tags = JSON.parse(row.tags);
+    } catch {
+      tags = [];
     }
-    meta[key] = value;
-  }
-  return { meta, body: match[2] };
-}
-
-function loadFiles(): FileMeta[] {
-  const knowledgeDir = path.join(process.cwd(), "src", "knowledge");
-  if (!fs.existsSync(knowledgeDir)) return [];
-
-  const files = fs.readdirSync(knowledgeDir).filter((f) => f.endsWith(".md"));
-  return files.map((file) => {
-    const raw = fs.readFileSync(path.join(knowledgeDir, file), "utf-8");
-    const { meta, body } = parseFrontmatter(raw);
     return {
-      id: (meta.id as string) || file.replace(".md", ""),
-      title: (meta.title as string) || file.replace(".md", ""),
-      tags: (meta.tags as string[]) || [],
-      body: body.trim(),
+      id: row.filename,
+      title: row.title,
+      tags,
+      body: row.content,
     };
   });
 }
@@ -103,10 +76,14 @@ function splitIntoChunks(file: FileMeta): KnowledgeChunk[] {
   return chunks;
 }
 
-export function getAllChunks(): KnowledgeChunk[] {
-  if (cachedChunks) return cachedChunks;
-  const files = loadFiles();
+export async function getAllChunks(): Promise<KnowledgeChunk[]> {
+  const now = Date.now();
+  if (cachedChunks && now - cacheTimestamp < CACHE_TTL_MS) {
+    return cachedChunks;
+  }
+  const files = await loadFiles();
   cachedChunks = files.flatMap(splitIntoChunks);
+  cacheTimestamp = now;
   return cachedChunks;
 }
 
@@ -118,8 +95,8 @@ function tokenize(text: string): string[] {
     .filter((w) => w.length > 1);
 }
 
-export function searchKnowledge(query: string, maxChunks = 8): KnowledgeChunk[] {
-  const chunks = getAllChunks();
+export async function searchKnowledge(query: string, maxChunks = 8): Promise<KnowledgeChunk[]> {
+  const chunks = await getAllChunks();
   if (chunks.length === 0) return [];
 
   const queryTokens = tokenize(query);
@@ -170,4 +147,5 @@ export function formatChunksForPrompt(chunks: KnowledgeChunk[]): string {
 
 export function invalidateCache() {
   cachedChunks = null;
+  cacheTimestamp = 0;
 }

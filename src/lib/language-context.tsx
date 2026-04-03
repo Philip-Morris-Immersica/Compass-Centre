@@ -1,7 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { type Language, t as translate } from "./translations";
+
+const STORAGE_KEY = "compass-language";
 
 type LanguageContextType = {
   language: Language | null;
@@ -14,8 +16,14 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language | null>(null);
 
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
+    if (saved) setLanguageState(saved);
+  }, []);
+
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
+    localStorage.setItem(STORAGE_KEY, lang);
   }, []);
 
   const t = useCallback(
