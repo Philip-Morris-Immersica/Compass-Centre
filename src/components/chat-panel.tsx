@@ -425,7 +425,6 @@ export function ChatPanel({ open, onClose }: ChatPanelProps) {
                       setMessages([{
                         id: `welcome-${Date.now()}`,
                         role: "assistant",
-                        content: welcome,
                         parts: [{ type: "text", text: welcome }],
                       }]);
                     }}
