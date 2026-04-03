@@ -1,0 +1,31 @@
+---
+description: Use shadcn/ui for all UI; init and add commands when missing
+alwaysApply: true
+---
+
+# shadcn/ui
+
+This project uses **shadcn/ui** for all UI elements. Do not introduce ad-hoc UI libraries or raw unstyled primitives for app chrome, forms, dialogs, navigation, tables, etc., unless there is no shadcn equivalent and the user explicitly approves an exception.
+
+## Setup
+
+If shadcn is not initialized (no `components.json` or CLI setup in the repo), run:
+
+```bash
+npx shadcn@latest init
+```
+
+## Adding components
+
+Prefer importing from the project’s shadcn component paths (e.g. `@/components/ui/...`) after installation. If a needed primitive is not installed, add it with the CLI, for example:
+
+```bash
+npx shadcn@latest add button
+```
+
+Replace `button` with the official component name (`input`, `dialog`, `dropdown-menu`, etc.).
+
+## Patterns
+
+- Compose features from shadcn primitives and project wrappers; keep styling consistent with existing `tailwind` + shadcn tokens.
+- When implementing new screens or controls, check whether a shadcn component already exists in the codebase before building from scratch.

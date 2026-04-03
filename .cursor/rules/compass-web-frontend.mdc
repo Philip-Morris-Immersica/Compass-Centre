@@ -1,0 +1,12 @@
+---
+description: Next.js App Router, React, and TypeScript conventions for compass-web
+globs: compass-web/**/*.ts,compass-web/**/*.tsx
+alwaysApply: false
+---
+
+# compass-web frontend conventions
+
+- Use the **App Router** under [compass-web/src/app](mdc:compass-web/src/app); prefer Server Components unless client interactivity requires `"use client"`.
+- Styling: **Tailwind CSS v4**—extend patterns in [compass-web/src/app/globals.css](mdc:compass-web/src/app/globals.css); keep layout/spacing consistent with [compass-web/src/app/layout.tsx](mdc:compass-web/src/app/layout.tsx).
+- Use `next/image` for images and Next.js metadata APIs (`Metadata` in layouts/pages) for SEO.
+- Match existing TypeScript style (explicit types where helpful, `Readonly<>` for props where used today).

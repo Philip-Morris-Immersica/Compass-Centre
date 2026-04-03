@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+description: Compass-Centre repo layout, primary app location, and key entry files for Next.js
+---
+
+# Compass-Centre overview
+
+This workspace centers on the **compass-web** app: Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, ESLint via `eslint-config-next`.
+
+## Where to start
+
+- Package scripts and dependencies: [compass-web/package.json](mdc:compass-web/package.json)
+- Next.js config: [compass-web/next.config.ts](mdc:compass-web/next.config.ts)
+- App Router root layout (fonts, metadata, global CSS import): [compass-web/src/app/layout.tsx](mdc:compass-web/src/app/layout.tsx)
+- Home route UI: [compass-web/src/app/page.tsx](mdc:compass-web/src/app/page.tsx)
+- Global styles: [compass-web/src/app/globals.css](mdc:compass-web/src/app/globals.css)
+
+Add new routes under `compass-web/src/app/` as `page.tsx` (and optional `layout.tsx`) per segment folders.
