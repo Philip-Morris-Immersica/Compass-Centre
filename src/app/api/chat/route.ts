@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       .find((m) => m.role === "user");
 
     const userText = extractText(lastUserMessage);
+    const responseLanguage = detectResponseLanguage(userText, language);
 
     const [relevantChunks, basePrompt, temperature, model, maxOutputTokens] = await Promise.all([
       searchKnowledge(userText, 8),
@@ -74,9 +75,9 @@ export async function POST(req: Request) {
     ]);
 
     const knowledgeContext = formatChunksForPrompt(relevantChunks);
-    const systemPrompt = buildSystemPrompt(basePrompt, language, knowledgeContext);
+    const systemPrompt = buildSystemPrompt(basePrompt, responseLanguage, knowledgeContext);
 
-    const conversationId = await getOrCreateConversation(chatId, language);
+    const conversationId = await getOrCreateConversation(chatId, responseLanguage);
 
     if (userText) {
       await db.insert(messagesTable).values({
@@ -131,6 +132,25 @@ function extractText(msg: UIMessage | undefined): string {
       .map((p) => p.text)
       .join(" ") ?? ""
   );
+}
+
+function detectResponseLanguage(text: string, fallback: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return fallback;
+
+  if (/[іїєґІЇЄҐ]/u.test(trimmed)) return "ua";
+
+  if (/[\u0600-\u06FF]/u.test(trimmed)) {
+    return /[پچژکگی]/u.test(trimmed) ? "fa" : "ar";
+  }
+
+  const cyrillicChars = trimmed.match(/[А-Яа-яЁё]/g)?.length ?? 0;
+  const latinChars = trimmed.match(/[A-Za-z]/g)?.length ?? 0;
+
+  if (cyrillicChars > latinChars && cyrillicChars > 0) return "bg";
+  if (latinChars > 0) return "en";
+
+  return fallback;
 }
 
 export async function GET(req: Request) {

@@ -91,13 +91,12 @@ export async function getSystemPromptText(): Promise<string> {
 }
 
 export function buildSystemPrompt(basePrompt: string, language: string, knowledgeContext: string): string {
-  const langInstruction = language !== "bg"
-    ? `\n\n══════════════════════════════════════════════
+  const languageLabel = getLanguageLabel(language);
+  const langInstruction = `\n\n══════════════════════════════════════════════
 6. ЕЗИК НА ОТГОВОРА / RESPONSE LANGUAGE (ЗАДЪЛЖИТЕЛНО)
 ══════════════════════════════════════════════
 
-Потребителят е избрал език: "${language}". ТРЯБВА да отговаряш ИЗЦЯЛО на този език. Преведи всички съвети, заглавия и обяснения. Запази непроменени: собствени имена на институции, URLs, адреси.`
-    : "";
+Езикът на текущото потребителско съобщение е "${languageLabel}". ТРЯБВА да отговаряш ИЗЦЯЛО на същия език. Преведи всички съвети, заглавия и обяснения. Запази непроменени: собствени имена на институции, URLs, адреси.`;
 
   const resourceBlock = knowledgeContext
     ? `\n\n══════════════════════════════════════════════
@@ -108,6 +107,23 @@ export function buildSystemPrompt(basePrompt: string, language: string, knowledg
     : "";
 
   return basePrompt + langInstruction + resourceBlock;
+}
+
+function getLanguageLabel(language: string): string {
+  switch (language) {
+    case "bg":
+      return "Bulgarian";
+    case "en":
+      return "English";
+    case "ua":
+      return "Ukrainian";
+    case "fa":
+      return "Persian (Farsi)";
+    case "ar":
+      return "Arabic";
+    default:
+      return language;
+  }
 }
 
 export function invalidatePromptCache() {
