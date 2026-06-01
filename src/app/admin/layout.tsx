@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Settings, BookOpen, MessageSquare, ArrowLeft } from "lucide-react";
+import { FileText, Settings, BookOpen, MessageSquare, ArrowLeft, Layers } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const NAV_ITEMS = [
   { href: "/admin/prompt", label: "System Prompt", icon: FileText },
+  { href: "/admin/scenarios", label: "Scenarios", icon: Layers },
   { href: "/admin/config", label: "Configuration", icon: Settings },
   { href: "/admin/knowledge", label: "Knowledge Base", icon: BookOpen },
   { href: "/admin/history", label: "Chat History", icon: MessageSquare },

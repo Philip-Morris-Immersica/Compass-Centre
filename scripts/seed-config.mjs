@@ -9,13 +9,14 @@ const systemPromptFile = fs.readFileSync(
   path.join(process.cwd(), "src", "lib", "system-prompt.ts"),
   "utf-8"
 );
-const match = systemPromptFile.match(/export const SYSTEM_PROMPT = `([\s\S]*?)`;/);
+const match = systemPromptFile.match(/const DEFAULT_SYSTEM_PROMPT = `([\s\S]*?)`;/);
 const systemPrompt = match ? match[1] : "";
 
 const configs = [
   ["system_prompt", systemPrompt],
   ["temperature", "0.2"],
   ["model", "gpt-5.4-mini"],
+  ["router_model", "gpt-5.4-mini"],
   ["max_output_tokens", "2000"],
 ];
 

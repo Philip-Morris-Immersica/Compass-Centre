@@ -2,6 +2,8 @@ import { streamText, convertToModelMessages, type UIMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { searchKnowledge, formatChunksForPrompt } from "@/lib/knowledge";
 import { getSystemPromptText, buildSystemPrompt } from "@/lib/system-prompt";
+import { routeScenario } from "@/lib/router";
+import { getScenariosBySlugs, formatScenariosForPrompt } from "@/lib/scenarios";
 import { db } from "@/db";
 import { configTable, conversationsTable, messagesTable } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -66,18 +68,44 @@ export async function POST(req: Request) {
     const userText = extractText(lastUserMessage);
     const responseLanguage = detectResponseLanguage(userText, language);
 
-    const [relevantChunks, basePrompt, temperature, model, maxOutputTokens] = await Promise.all([
-      searchKnowledge(userText, 8),
-      getSystemPromptText(),
-      getConfig("temperature", "0.2").then(Number),
-      getConfig("model", "gpt-4.1-mini"),
-      getConfig("max_output_tokens", "2000").then(Number),
-    ]);
+    const transcript = uiMessages
+      .map((m) => ({ role: m.role, content: extractText(m) }))
+      .filter((t) => t.content);
+
+    const [relevantChunks, basePrompt, temperature, model, routerModel, maxOutputTokens] =
+      await Promise.all([
+        searchKnowledge(userText, 5),
+        getSystemPromptText(),
+        getConfig("temperature", "0.2").then(Number),
+        getConfig("model", "gpt-5.4-mini"),
+        getConfig("router_model", "gpt-5.4-mini"),
+        getConfig("max_output_tokens", "2000").then(Number),
+      ]);
+
+    // Рутер-lite стъпка: избира релевантен(и) сценарий(и) + извлича профила.
+    const routed = await routeScenario({ conversation: transcript, model: routerModel });
+    const scenarios = await getScenariosBySlugs(routed.scenarioIds);
+    const scenarioContext = formatScenariosForPrompt(scenarios);
 
     const knowledgeContext = formatChunksForPrompt(relevantChunks);
-    const systemPrompt = buildSystemPrompt(basePrompt, responseLanguage, knowledgeContext);
+    const systemPrompt = buildSystemPrompt(basePrompt, responseLanguage, {
+      scenarioContext,
+      knowledgeContext,
+      profile: routed.profile,
+      covered: routed.covered,
+    });
 
     const conversationId = await getOrCreateConversation(chatId, responseLanguage);
+
+    // Запазваме "състоянието на случая" към разговора (видимо в админа).
+    try {
+      await db
+        .update(conversationsTable)
+        .set({ state: JSON.stringify(routed), updatedAt: new Date() })
+        .where(eq(conversationsTable.id, conversationId));
+    } catch (stateError) {
+      console.error("Failed to save conversation state:", stateError);
+    }
 
     if (userText) {
       await db.insert(messagesTable).values({

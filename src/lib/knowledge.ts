@@ -87,6 +87,13 @@ export async function getAllChunks(): Promise<KnowledgeChunk[]> {
   return cachedChunks;
 }
 
+const DEPRIORITIZED_SOURCES = ["ukraine.gov.bg"];
+
+function isDeprioritizedSource(chunk: KnowledgeChunk): boolean {
+  const haystack = `${chunk.fileId} ${chunk.title}`.toLowerCase();
+  return DEPRIORITIZED_SOURCES.some((s) => haystack.includes(s));
+}
+
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
@@ -116,6 +123,12 @@ export async function searchKnowledge(query: string, maxChunks = 8): Promise<Kno
         if (tt === qt) { score += 3; break; }
         if (tt.includes(qt) || qt.includes(tt)) { score += 1.5; break; }
       }
+    }
+
+    // Намаляваме приоритета на остарели източници (клиентска обр. връзка:
+    // ukraine.gov.bg не се обновява и не бива да е пръв избор).
+    if (isDeprioritizedSource(chunk)) {
+      score *= 0.25;
     }
 
     return { chunk, score };

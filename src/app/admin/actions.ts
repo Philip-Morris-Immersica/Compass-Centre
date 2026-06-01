@@ -7,11 +7,13 @@ import {
   conversationsTable,
   messagesTable,
   usersTable,
+  scenariosTable,
 } from "@/db/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { invalidateCache } from "@/lib/knowledge";
 import { invalidatePromptCache } from "@/lib/system-prompt";
+import { invalidateScenariosCache } from "@/lib/scenarios";
 import { revalidatePath } from "next/cache";
 
 async function requireAdmin() {
@@ -120,6 +122,72 @@ export async function deleteKnowledgeFile(id: string) {
   await db.delete(knowledgeFilesTable).where(eq(knowledgeFilesTable.id, id));
   invalidateCache();
   revalidatePath("/admin/knowledge");
+}
+
+// ─── Scenarios CRUD ──────────────────────────────────────────
+
+type ScenarioInput = {
+  slug: string;
+  title: string;
+  category: string;
+  scope: string;
+  goal: string;
+  approach: string;
+  behavior: string;
+  knowledge: string;
+  resources: string;
+  enabled: boolean;
+  sortOrder: number;
+};
+
+export async function listScenarios() {
+  await requireAdmin();
+  return db
+    .select({
+      id: scenariosTable.id,
+      slug: scenariosTable.slug,
+      title: scenariosTable.title,
+      category: scenariosTable.category,
+      enabled: scenariosTable.enabled,
+      sortOrder: scenariosTable.sortOrder,
+      updatedAt: scenariosTable.updatedAt,
+    })
+    .from(scenariosTable)
+    .orderBy(asc(scenariosTable.sortOrder));
+}
+
+export async function getScenario(id: string) {
+  await requireAdmin();
+  const [row] = await db.select().from(scenariosTable).where(eq(scenariosTable.id, id)).limit(1);
+  return row ?? null;
+}
+
+export async function createScenario(data: ScenarioInput) {
+  await requireAdmin();
+  const [row] = await db
+    .insert(scenariosTable)
+    .values(data)
+    .returning({ id: scenariosTable.id });
+  invalidateScenariosCache();
+  revalidatePath("/admin/scenarios");
+  return row;
+}
+
+export async function updateScenario(id: string, data: Partial<ScenarioInput>) {
+  await requireAdmin();
+  await db
+    .update(scenariosTable)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(scenariosTable.id, id));
+  invalidateScenariosCache();
+  revalidatePath("/admin/scenarios");
+}
+
+export async function deleteScenario(id: string) {
+  await requireAdmin();
+  await db.delete(scenariosTable).where(eq(scenariosTable.id, id));
+  invalidateScenariosCache();
+  revalidatePath("/admin/scenarios");
 }
 
 // ─── Conversations / History ─────────────────────────────────

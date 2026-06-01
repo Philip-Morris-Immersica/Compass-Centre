@@ -11,7 +11,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:demo": "tsx src/index.ts"
+    "db:demo": "tsx src/index.ts",
+    "db:seed-scenarios": "tsx scripts/seed-scenarios.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.50",
